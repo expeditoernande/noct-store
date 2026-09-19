@@ -1,0 +1,108 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  --color-ink: #111111;
+  --color-ink-soft: #4a4a4a;
+  --color-muted: #8a8a8a;
+  --color-line: #e6e6e6;
+  --color-paper: #ffffff;
+  --color-mist: #f4f4f4;
+
+  --animate-fade-in: fade-in 0.4s ease both;
+  --animate-fade-up: fade-up 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  --animate-slide-in-left: slide-in-left 0.35s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  --animate-slide-in-right: slide-in-right 0.35s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  --animate-drop-in: drop-in 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+}
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tracking-brand {
+    letter-spacing: 0.42em;
+  }
+
+  .tracking-label {
+    letter-spacing: 0.18em;
+  }
+}
