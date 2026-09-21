@@ -33,13 +33,11 @@ const INITIAL_FORM = {
   uf: '',
   entrega: 'padrao',
   pagamento: 'pix',
-  cardName: '',
-  cardNumber: '',
-  cardExpiry: '',
-  cardCvv: '',
 }
 
-function Field({ label, name, value, onChange, className = '', ...props }) {
+function Field({ label, name, value, onChange, error, className = '', ...props }) {
+  const errorId = `${name}-error`
+
   return (
     <label className={`flex flex-col gap-2 ${className}`}>
       <span className="text-[10px] uppercase tracking-label text-muted">{label}</span>
@@ -47,9 +45,18 @@ function Field({ label, name, value, onChange, className = '', ...props }) {
         name={name}
         value={value}
         onChange={onChange}
-        className="border-b border-line bg-transparent py-2 text-[12px] text-ink outline-none transition-colors duration-200 focus:border-ink"
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
+        className={`border-b bg-transparent py-2 text-[12px] text-ink outline-none transition-colors duration-200 focus:border-ink ${
+          error ? 'border-red-700' : 'border-line'
+        }`}
         {...props}
       />
+      {error && (
+        <span id={errorId} className="text-[10px] text-red-700">
+          {error}
+        </span>
+      )}
     </label>
   )
 }
@@ -82,10 +89,11 @@ function OptionCard({ active, onSelect, title, detail, trailing }) {
 }
 
 export default function Checkout() {
-  const { items, subtotal, clearCart } = useCart()
+  const { items, subtotal } = useCart()
   const [step, setStep] = useState(0)
   const [form, setForm] = useState(INITIAL_FORM)
   const [orderCode, setOrderCode] = useState(null)
+  const [errors, setErrors] = useState({})
 
   const shipping = useMemo(
     () => SHIPPING_OPTIONS.find((option) => option.id === form.entrega) ?? SHIPPING_OPTIONS[1],
@@ -98,23 +106,54 @@ export default function Checkout() {
   function handleChange(event) {
     const { name, value } = event.target
     setForm((previous) => ({ ...previous, [name]: value }))
+    setErrors((previous) => {
+      if (!previous[name]) return previous
+      const { [name]: _, ...remaining } = previous
+      return remaining
+    })
+  }
+
+  function validateStep(targetStep) {
+    const nextErrors = {}
+    const digits = (value) => value.replace(/\D/g, '')
+
+    if (targetStep === 0) {
+      if (!form.nome.trim()) nextErrors.nome = 'Informe seu nome completo.'
+      if (!/^\S+@\S+\.\S+$/.test(form.email)) nextErrors.email = 'Informe um e-mail válido.'
+      if (digits(form.cpf).length !== 11) nextErrors.cpf = 'Informe um CPF com 11 dígitos.'
+      if (digits(form.telefone).length < 10) nextErrors.telefone = 'Informe um telefone válido.'
+    }
+
+    if (targetStep === 1) {
+      if (digits(form.cep).length !== 8) nextErrors.cep = 'Informe um CEP com 8 dígitos.'
+      if (!form.rua.trim()) nextErrors.rua = 'Informe a rua ou avenida.'
+      if (!form.numero.trim()) nextErrors.numero = 'Informe o número.'
+      if (!form.bairro.trim()) nextErrors.bairro = 'Informe o bairro.'
+      if (!form.cidade.trim()) nextErrors.cidade = 'Informe a cidade.'
+      if (!/^[a-zA-Z]{2}$/.test(form.uf.trim())) nextErrors.uf = 'Informe a UF com 2 letras.'
+    }
+
+    setErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
+
+  function continueCheckout() {
+    if (!validateStep(step)) return
+    setStep((current) => Math.min(STEPS.length - 1, current + 1))
   }
 
   function finalizeOrder() {
-    // Integração futura: Mercado Pago / Stripe.
-    // Aqui entraria a chamada ao gateway com `total`, `form` e `items`.
-    setOrderCode(`NCT-${Math.random().toString(36).slice(2, 8).toUpperCase()}`)
-    clearCart()
+    setOrderCode('SIMULAÇÃO')
   }
 
   if (orderCode) {
     return (
       <div className="mx-auto flex max-w-lg animate-fade-up flex-col items-center gap-6 px-6 py-32 text-center">
-        <span className="text-[10px] uppercase tracking-label text-muted">Pedido confirmado</span>
-        <h1 className="text-lg uppercase tracking-label text-ink">Obrigado pela compra</h1>
+        <span className="text-[10px] uppercase tracking-label text-muted">Simulação concluída</span>
+        <h1 className="text-lg uppercase tracking-label text-ink">Nenhum pedido foi criado</h1>
         <p className="text-[11px] leading-relaxed text-ink-soft">
-          Seu pedido <span className="text-ink">{orderCode}</span> foi registrado. Você receberá os
-          detalhes por e-mail.
+          Esta é uma demonstração do fluxo de checkout. Nenhum pagamento, pedido ou e-mail foi
+          gerado, e sua sacola foi mantida.
         </p>
         <Link
           to="/shop"
@@ -143,7 +182,7 @@ export default function Checkout() {
   return (
     <div className="px-4 pt-12 md:px-6">
       <header className="pb-8">
-        <p className="text-[10px] uppercase tracking-label text-muted">Finalizar compra</p>
+        <p className="text-[10px] uppercase tracking-label text-muted">Demonstração de checkout</p>
         <h1 className="mt-4 text-sm uppercase tracking-label text-ink">Checkout</h1>
       </header>
 
@@ -152,7 +191,8 @@ export default function Checkout() {
           <li key={label} className="shrink-0">
             <button
               type="button"
-              onClick={() => setStep(index)}
+              onClick={() => index <= step && setStep(index)}
+              disabled={index > step}
               className="flex items-center gap-2 text-[10px] uppercase tracking-label transition-colors duration-200"
             >
               <span
@@ -177,6 +217,7 @@ export default function Checkout() {
                 name="nome"
                 value={form.nome}
                 onChange={handleChange}
+                error={errors.nome}
                 placeholder="Seu nome"
                 className="sm:col-span-2"
               />
@@ -186,6 +227,7 @@ export default function Checkout() {
                 type="email"
                 value={form.email}
                 onChange={handleChange}
+                error={errors.email}
                 placeholder="voce@email.com"
               />
               <Field
@@ -193,6 +235,7 @@ export default function Checkout() {
                 name="cpf"
                 value={form.cpf}
                 onChange={handleChange}
+                error={errors.cpf}
                 placeholder="000.000.000-00"
               />
               <Field
@@ -200,6 +243,7 @@ export default function Checkout() {
                 name="telefone"
                 value={form.telefone}
                 onChange={handleChange}
+                error={errors.telefone}
                 placeholder="(00) 00000-0000"
                 className="sm:col-span-2"
               />
@@ -213,6 +257,7 @@ export default function Checkout() {
                 name="cep"
                 value={form.cep}
                 onChange={handleChange}
+                error={errors.cep}
                 placeholder="00000-000"
               />
               <Field
@@ -220,6 +265,7 @@ export default function Checkout() {
                 name="rua"
                 value={form.rua}
                 onChange={handleChange}
+                error={errors.rua}
                 placeholder="Rua / Avenida"
                 className="sm:col-span-2"
               />
@@ -228,6 +274,7 @@ export default function Checkout() {
                 name="numero"
                 value={form.numero}
                 onChange={handleChange}
+                error={errors.numero}
                 placeholder="000"
               />
               <Field
@@ -242,9 +289,23 @@ export default function Checkout() {
                 name="bairro"
                 value={form.bairro}
                 onChange={handleChange}
+                error={errors.bairro}
               />
-              <Field label="Cidade" name="cidade" value={form.cidade} onChange={handleChange} />
-              <Field label="UF" name="uf" value={form.uf} onChange={handleChange} placeholder="SP" />
+              <Field
+                label="Cidade"
+                name="cidade"
+                value={form.cidade}
+                onChange={handleChange}
+                error={errors.cidade}
+              />
+              <Field
+                label="UF"
+                name="uf"
+                value={form.uf}
+                onChange={handleChange}
+                error={errors.uf}
+                placeholder="SP"
+              />
             </div>
           )}
 
@@ -275,45 +336,10 @@ export default function Checkout() {
                 />
               ))}
 
-              {form.pagamento === 'cartao' && (
-                <div className="mt-4 grid gap-7 border border-line p-5 sm:grid-cols-2">
-                  <Field
-                    label="Nome no cartão"
-                    name="cardName"
-                    value={form.cardName}
-                    onChange={handleChange}
-                    className="sm:col-span-2"
-                  />
-                  <Field
-                    label="Número do cartão"
-                    name="cardNumber"
-                    value={form.cardNumber}
-                    onChange={handleChange}
-                    placeholder="0000 0000 0000 0000"
-                    className="sm:col-span-2"
-                  />
-                  <Field
-                    label="Validade"
-                    name="cardExpiry"
-                    value={form.cardExpiry}
-                    onChange={handleChange}
-                    placeholder="MM/AA"
-                  />
-                  <Field
-                    label="CVV"
-                    name="cardCvv"
-                    value={form.cardCvv}
-                    onChange={handleChange}
-                    placeholder="000"
-                  />
-                </div>
-              )}
-
-              {form.pagamento === 'pix' && (
-                <p className="mt-2 text-[10px] uppercase tracking-label text-muted">
-                  O QR Code será gerado na próxima etapa.
-                </p>
-              )}
+              <p className="mt-2 text-[10px] uppercase tracking-label text-muted">
+                Dados de pagamento não são coletados nesta demonstração. Em produção, use o ambiente
+                hospedado ou tokenizado do provedor de pagamento.
+              </p>
             </div>
           )}
 
@@ -404,7 +430,7 @@ export default function Checkout() {
             {step < STEPS.length - 1 ? (
               <button
                 type="button"
-                onClick={() => setStep((current) => Math.min(STEPS.length - 1, current + 1))}
+                onClick={continueCheckout}
                 className="bg-ink px-8 py-3 text-[10px] uppercase tracking-label text-paper transition-opacity duration-300 hover:opacity-80"
               >
                 Continuar
@@ -415,7 +441,7 @@ export default function Checkout() {
                 onClick={finalizeOrder}
                 className="bg-ink px-8 py-3 text-[10px] uppercase tracking-label text-paper transition-opacity duration-300 hover:opacity-80"
               >
-                Finalizar pedido
+                Concluir simulação
               </button>
             )}
           </div>
@@ -471,7 +497,8 @@ export default function Checkout() {
           </div>
 
           <p className="mt-4 text-[10px] leading-relaxed text-muted">
-            À vista no Pix: {formatBRLCompact(total)}. Pagamento processado por gateway externo.
+            {form.pagamento === 'pix' && `À vista no Pix: ${formatBRLCompact(total)}. `}
+            Valores demonstrativos: o pagamento ainda não está integrado.
           </p>
         </aside>
       </div>
