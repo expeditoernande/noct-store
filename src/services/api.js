@@ -15,7 +15,8 @@ async function request(path, options = {}) {
   if (!base) throw new Error('API não configurada nesta build')
 
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 4000)
+  const timeoutMs = options.timeout ?? 4000
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
     const res = await fetch(`${base}${path}`, {
@@ -51,6 +52,7 @@ export function confirmCheckoutPro(token, paymentId) {
   return request(`/api/checkout-pro/${encodeURIComponent(token)}/confirm`, {
     method: 'POST',
     body: JSON.stringify({ paymentId }),
+    timeout: 15000,
   })
 }
 

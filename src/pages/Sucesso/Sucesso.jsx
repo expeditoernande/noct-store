@@ -10,6 +10,7 @@ const LOCAL_DEV_HANDOFF_URL = 'http://localhost:5173/checkout/sucesso'
 export default function Sucesso() {
   const [searchParams] = useSearchParams()
   const [result, setResult] = useState(INITIAL)
+  const [attempt, setAttempt] = useState(0)
   const { clearCart, quantity } = useCart()
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function Sucesso() {
     }
 
     let active = true
+    setResult(INITIAL)
 
     confirmCheckoutPro(token, paymentId)
       .then((data) => {
@@ -47,7 +49,7 @@ export default function Sucesso() {
     return () => {
       active = false
     }
-  }, [searchParams, clearCart])
+  }, [searchParams, clearCart, attempt])
 
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-lg animate-fade-up flex-col items-center gap-6 px-6 py-24 text-center">
@@ -111,9 +113,16 @@ export default function Sucesso() {
             {result.state === 'recusado' ? 'Sua compra não foi concluída' : 'Confirmação pendente'}
           </h1>
           <p className="text-[11px] leading-relaxed text-ink-soft">
-            Nenhum pedido foi criado e sua sacola foi mantida. Tente novamente com outro cartão ou
-            entre em contato pelo rodapé da loja.
+            Nenhum pedido foi criado e sua sacola foi mantida. Se o pagamento foi aprovado, clique
+            em confirmar novamente para registrar sua compra.
           </p>
+          <button
+            type="button"
+            onClick={() => setAttempt((value) => value + 1)}
+            className="border-b border-ink pb-1 text-[10px] uppercase tracking-label transition-opacity duration-200 hover:opacity-50"
+          >
+            Confirmar novamente
+          </button>
           <Link
             to="/shop"
             className="border-b border-ink pb-1 text-[10px] uppercase tracking-label transition-opacity duration-200 hover:opacity-50"
