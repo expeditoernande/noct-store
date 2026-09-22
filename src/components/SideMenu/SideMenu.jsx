@@ -10,8 +10,7 @@ const LINKS = [
   { label: 'Camisetas', to: '/shop?categoria=Camisetas' },
   { label: 'Calças', to: '/shop?categoria=Cal%C3%A7as' },
   { label: 'Acessórios', to: '/shop?categoria=Acess%C3%B3rios' },
-  { label: 'Sobre', to: '/' },
-  { label: 'Contato', to: '/' },
+  { label: 'Contato', to: '#contato' },
 ]
 
 export default function SideMenu() {
@@ -55,17 +54,29 @@ export default function SideMenu() {
 
         <nav className="flex-1 overflow-y-auto px-5 py-8">
           <ul className="flex flex-col gap-5">
-            {LINKS.map((link) => (
-              <li key={link.label}>
-                <Link
-                  to={link.to}
-                  onClick={closeMenu}
-                  className="text-xs uppercase tracking-label text-ink transition-opacity duration-200 hover:opacity-50"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            {LINKS.map((link) =>
+              link.to.startsWith('#') ? (
+                <li key={link.label}>
+                  <a
+                    href={link.to}
+                    onClick={closeMenu}
+                    className="text-xs uppercase tracking-label text-ink transition-opacity duration-200 hover:opacity-50"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ) : (
+                <li key={link.label}>
+                  <Link
+                    to={link.to}
+                    onClick={closeMenu}
+                    className="text-xs uppercase tracking-label text-ink transition-opacity duration-200 hover:opacity-50"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ),
+            )}
           </ul>
         </nav>
 

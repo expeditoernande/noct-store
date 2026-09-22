@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { allColors, allSizes, categories, priceRanges } from '../../data/products'
+import { useProducts } from '../../context/ProductContext'
 import { colorToHex } from '../../utils/format'
 
 const SORT_OPTIONS = [
@@ -45,6 +45,7 @@ function Check({ checked, onChange, label, swatch }) {
 
 export default function ProductFilters({ value, onChange, onClear, resultCount }) {
   const [open, setOpen] = useState(false)
+  const { categories, allSizes, allColors, priceRanges } = useProducts()
 
   const activeCount =
     value.categories.length + value.sizes.length + value.colors.length + value.ranges.length

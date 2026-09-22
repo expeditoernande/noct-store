@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Menu, Search, ShoppingBag, User } from 'lucide-react'
+import { Menu, Search, ShoppingBag } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { useUI } from '../../context/UIContext'
 
@@ -41,9 +41,6 @@ export default function Header() {
         </Link>
 
         <div className="flex items-center justify-end gap-0.5 md:gap-1">
-          <IconButton label="Minha conta" className="hidden md:inline-flex">
-            <User size={18} strokeWidth={1.5} />
-          </IconButton>
           <button
             type="button"
             aria-label="Abrir sacola"

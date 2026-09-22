@@ -14,12 +14,7 @@ const COLUMNS = [
   },
   {
     title: 'Ajuda',
-    links: [
-      { label: 'Contato', to: '/' },
-      { label: 'Trocas e devoluções', to: '/' },
-      { label: 'Prazo de entrega', to: '/' },
-      { label: 'FAQ', to: '/' },
-    ],
+    links: [{ label: 'Contato', to: '#contato' }],
   },
 ]
 
@@ -43,12 +38,21 @@ export default function Footer() {
             <ul className="flex flex-col gap-3">
               {column.links.map((link) => (
                 <li key={link.label}>
-                  <Link
-                    to={link.to}
-                    className="text-[11px] text-ink-soft transition-colors duration-200 hover:text-ink"
-                  >
-                    {link.label}
-                  </Link>
+                  {link.to.startsWith('#') ? (
+                    <a
+                      href={link.to}
+                      className="text-[11px] text-ink-soft transition-colors duration-200 hover:text-ink"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.to}
+                      className="text-[11px] text-ink-soft transition-colors duration-200 hover:text-ink"
+                    >
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

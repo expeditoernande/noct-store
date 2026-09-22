@@ -5,11 +5,12 @@ import ProductGrid from '../../components/ProductGrid/ProductGrid'
 import ProductImage from '../../components/ProductImage/ProductImage'
 import { useCart } from '../../context/CartContext'
 import { useUI } from '../../context/UIContext'
-import { getProductBySlug, products } from '../../data/products'
+import { useProducts } from '../../context/ProductContext'
 import { colorToHex, formatBRL, formatBRLCompact } from '../../utils/format'
 
 export default function Product() {
   const { slug } = useParams()
+  const { products, getProductBySlug } = useProducts()
   const product = getProductBySlug(slug)
   const { addItem } = useCart()
   const { openCart } = useUI()
@@ -37,7 +38,7 @@ export default function Product() {
       (item) => item.category !== product.category && item.id !== product.id,
     )
     return [...sameCategory, ...others].slice(0, 3)
-  }, [product])
+  }, [product, products])
 
   if (!product) {
     return (

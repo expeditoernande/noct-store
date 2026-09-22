@@ -4,6 +4,9 @@ import { Check } from 'lucide-react'
 import ProductImage from '../../components/ProductImage/ProductImage'
 import { useCart } from '../../context/CartContext'
 import { formatBRL, formatBRLCompact } from '../../utils/format'
+import { createCheckoutPro } from '../../services/api'
+import { validateStepErrors } from '../../utils/checkoutValidation'
+import { maskCPF, maskPhone, maskCEP } from '../../utils/masks'
 
 const STEPS = ['Dados pessoais', 'Endereço', 'Entrega', 'Pagamento', 'Revisão']
 
@@ -92,7 +95,8 @@ export default function Checkout() {
   const { items, subtotal } = useCart()
   const [step, setStep] = useState(0)
   const [form, setForm] = useState(INITIAL_FORM)
-  const [orderCode, setOrderCode] = useState(null)
+  const [order, setOrder] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
 
   const shipping = useMemo(
@@ -103,9 +107,18 @@ export default function Checkout() {
   const pixDiscountValue = form.pagamento === 'pix' ? Math.round(subtotal * 0.05 * 100) / 100 : 0
   const total = Math.max(0, subtotal + shipping.price - pixDiscountValue)
 
-  function handleChange(event) {
+  const MASKERS = {
+  cpf: maskCPF,
+  telefone: maskPhone,
+  cep: maskCEP,
+}
+
+function handleChange(event) {
     const { name, value } = event.target
-    setForm((previous) => ({ ...previous, [name]: value }))
+    const masker = MASKERS[name]
+    const nextValue = masker ? masker(value) : value
+
+    setForm((previous) => ({ ...previous, [name]: nextValue }))
     setErrors((previous) => {
       if (!previous[name]) return previous
       const { [name]: _, ...remaining } = previous
@@ -114,24 +127,7 @@ export default function Checkout() {
   }
 
   function validateStep(targetStep) {
-    const nextErrors = {}
-    const digits = (value) => value.replace(/\D/g, '')
-
-    if (targetStep === 0) {
-      if (!form.nome.trim()) nextErrors.nome = 'Informe seu nome completo.'
-      if (!/^\S+@\S+\.\S+$/.test(form.email)) nextErrors.email = 'Informe um e-mail válido.'
-      if (digits(form.cpf).length !== 11) nextErrors.cpf = 'Informe um CPF com 11 dígitos.'
-      if (digits(form.telefone).length < 10) nextErrors.telefone = 'Informe um telefone válido.'
-    }
-
-    if (targetStep === 1) {
-      if (digits(form.cep).length !== 8) nextErrors.cep = 'Informe um CEP com 8 dígitos.'
-      if (!form.rua.trim()) nextErrors.rua = 'Informe a rua ou avenida.'
-      if (!form.numero.trim()) nextErrors.numero = 'Informe o número.'
-      if (!form.bairro.trim()) nextErrors.bairro = 'Informe o bairro.'
-      if (!form.cidade.trim()) nextErrors.cidade = 'Informe a cidade.'
-      if (!/^[a-zA-Z]{2}$/.test(form.uf.trim())) nextErrors.uf = 'Informe a UF com 2 letras.'
-    }
+    const nextErrors = validateStepErrors(targetStep, form)
 
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
@@ -142,18 +138,58 @@ export default function Checkout() {
     setStep((current) => Math.min(STEPS.length - 1, current + 1))
   }
 
-  function finalizeOrder() {
-    setOrderCode('SIMULAÇÃO')
+  async function finalizeOrder() {
+    setSubmitting(true)
+
+    try {
+      const result = await createCheckoutPro({
+        customer: {
+          name: form.nome,
+          email: form.email,
+          phone: form.telefone,
+        },
+        shipping: form.entrega,
+        payment: form.pagamento,
+        items: items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color,
+        })),
+      })
+      window.location.href = result.initPoint
+      return
+    } catch {
+      setOrder({ demo: true })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
-  if (orderCode) {
+  if (order) {
+    const isDemo = order.demo
+
     return (
       <div className="mx-auto flex max-w-lg animate-fade-up flex-col items-center gap-6 px-6 py-32 text-center">
-        <span className="text-[10px] uppercase tracking-label text-muted">Simulação concluída</span>
-        <h1 className="text-lg uppercase tracking-label text-ink">Nenhum pedido foi criado</h1>
+        <span className="text-[10px] uppercase tracking-label text-muted">
+          {isDemo ? 'Simulação concluída' : 'Pedido registrado'}
+        </span>
+        <h1 className="text-lg uppercase tracking-label text-ink">
+          {isDemo ? 'Nenhum pedido foi criado' : `Pedido ${order.numero}`}
+        </h1>
         <p className="text-[11px] leading-relaxed text-ink-soft">
-          Esta é uma demonstração do fluxo de checkout. Nenhum pagamento, pedido ou e-mail foi
-          gerado, e sua sacola foi mantida.
+          {isDemo ? (
+            <>
+              A API de pedidos está indisponível nesta build. Nenhum pagamento, pedido ou e-mail
+              foi gerado, e sua sacola foi mantida.
+            </>
+          ) : (
+            <>
+              Seu pedido entrou como <span className="text-ink">{order.status}</span> — nenhum
+              pagamento foi processado nesta demonstração. Ele só é confirmado quando o pagamento
+              é aprovado no painel administrativo, e sua sacola foi mantida até lá.
+            </>
+          )}
         </p>
         <Link
           to="/shop"
@@ -439,9 +475,10 @@ export default function Checkout() {
               <button
                 type="button"
                 onClick={finalizeOrder}
-                className="bg-ink px-8 py-3 text-[10px] uppercase tracking-label text-paper transition-opacity duration-300 hover:opacity-80"
+                disabled={submitting}
+                className="bg-ink px-8 py-3 text-[10px] uppercase tracking-label text-paper transition-opacity duration-300 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Concluir simulação
+                {submitting ? 'Processando…' : 'Concluir pedido (simulação)'}
               </button>
             )}
           </div>

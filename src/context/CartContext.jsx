@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { getProductById } from '../data/products'
+import { useProducts } from './ProductContext'
 
 const CartContext = createContext(null)
 const STORAGE_KEY = 'noct-cart'
@@ -20,6 +20,7 @@ function readStoredCart() {
 }
 
 export function CartProvider({ children }) {
+  const { getProductById } = useProducts()
   const [items, setItems] = useState(readStoredCart)
 
   useEffect(() => {
@@ -86,7 +87,7 @@ export function CartProvider({ children }) {
     const quantity = detailed.reduce((total, item) => total + item.quantity, 0)
 
     return { items: detailed, subtotal, quantity }
-  }, [items])
+  }, [items, getProductById])
 
   const value = useMemo(
     () => ({

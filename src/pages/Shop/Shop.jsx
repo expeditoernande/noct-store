@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ProductFilters from '../../components/ProductFilters/ProductFilters'
 import ProductGrid from '../../components/ProductGrid/ProductGrid'
-import { priceRanges, products } from '../../data/products'
+import { useProducts } from '../../context/ProductContext'
 
 const EMPTY_FILTERS = {
   categories: [],
@@ -29,6 +29,7 @@ function sortProducts(list, sort) {
 
 export default function Shop() {
   const [searchParams] = useSearchParams()
+  const { products, priceRanges } = useProducts()
   const categoriaParam = searchParams.get('categoria') || ''
   const buscaParam = searchParams.get('busca') || ''
   const sortParam = searchParams.get('sort') || 'recentes'
@@ -73,7 +74,7 @@ export default function Shop() {
     })
 
     return sortProducts(list, filters.sort)
-  }, [filters, busca])
+  }, [filters, busca, products, priceRanges])
 
   return (
     <div className="px-4 pt-12 md:px-6">

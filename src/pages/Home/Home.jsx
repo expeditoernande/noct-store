@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
 import ProductGrid from '../../components/ProductGrid/ProductGrid'
-import { categories, products } from '../../data/products'
+import { useProducts } from '../../context/ProductContext'
 
 export default function Home() {
+  const { products, categories } = useProducts()
   const newProducts = products.filter((product) => product.isNew)
 
   return (

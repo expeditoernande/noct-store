@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
-import { products } from '../../data/products'
 import { formatBRL } from '../../utils/format'
 import { useUI } from '../../context/UIContext'
+import { useProducts } from '../../context/ProductContext'
 import ProductImage from '../ProductImage/ProductImage'
 
 export default function SearchBar() {
   const { searchOpen, closeSearch } = useUI()
+  const { products } = useProducts()
   const [query, setQuery] = useState('')
   const inputRef = useRef(null)
   const navigate = useNavigate()
