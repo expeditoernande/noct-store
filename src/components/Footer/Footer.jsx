@@ -59,32 +59,6 @@ export default function Footer() {
           </div>
         ))}
 
-        <div className="flex flex-col gap-5">
-          <span className="text-[10px] uppercase tracking-label text-muted">Social</span>
-          <ul className="flex flex-col gap-3">
-            <li>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noreferrer"
-                className="text-[11px] text-ink-soft transition-colors duration-200 hover:text-ink"
-              >
-                Instagram
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://tiktok.com"
-                target="_blank"
-                rel="noreferrer"
-                className="text-[11px] text-ink-soft transition-colors duration-200 hover:text-ink"
-              >
-                TikTok
-              </a>
-            </li>
-          </ul>
-        </div>
-
         <div className="flex flex-col gap-5 md:col-span-2 lg:col-span-1">
           <span className="text-[10px] uppercase tracking-label text-muted">Receba novidades</span>
           <form onSubmit={handleSubmit} className="flex items-center gap-3 border-b border-line pb-2">
