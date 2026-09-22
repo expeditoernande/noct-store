@@ -21,7 +21,11 @@ async function request(path, options = {}) {
   try {
     const res = await fetch(`${base}${path}`, {
       ...options,
-      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Front-Base': `${window.location.origin}${import.meta.env.BASE_URL}`.replace(/\/$/, ''),
+        ...(options.headers || {}),
+      },
       signal: options.signal || controller.signal,
     })
     const data = await res.json().catch(() => ({}))
