@@ -29,6 +29,7 @@ jobs:
         env:
           GH_PAGES: 'true'
           GH_BASE: '/${{ github.event.repository.name }}/'
+          VITE_API_URL: 'https://noct-backend-5as8.onrender.com'
       - name: Adicionar fallback SPA (404.html)
         run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v3
