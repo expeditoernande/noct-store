@@ -4,6 +4,15 @@ import { fetchProducts } from '../services/api'
 
 const ProductContext = createContext(null)
 
+const IMAGE_BASE = import.meta.env.BASE_URL
+
+function withImageBase(list) {
+  return (list || []).map((p) => ({
+    ...p,
+    images: (p.images || []).map((src) => `${IMAGE_BASE}${src.replace(/^\//, '')}`),
+  }))
+}
+
 export const priceRanges = [
   { label: 'Até R$ 250', min: 0, max: 250 },
   { label: 'R$ 250 — R$ 350', min: 250, max: 350 },
@@ -12,7 +21,7 @@ export const priceRanges = [
 ]
 
 export function ProductProvider({ children }) {
-  const [products, setProducts] = useState(localProducts)
+  const [products, setProducts] = useState(() => withImageBase(localProducts))
   const [source, setSource] = useState('local')
   const [loading, setLoading] = useState(true)
 
@@ -24,7 +33,7 @@ export function ProductProvider({ children }) {
       .then((payload) => {
         const apiProducts = Array.isArray(payload) ? payload : payload.products
         if (apiProducts?.length) {
-          setProducts(apiProducts)
+          setProducts(withImageBase(apiProducts))
           setSource('api')
         }
       })
