@@ -15,7 +15,7 @@ async function request(path, options = {}) {
   if (!base) throw new Error('API não configurada nesta build')
 
   const controller = new AbortController()
-  const timeoutMs = options.timeout ?? 4000
+  const timeoutMs = options.timeout ?? 12000
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
